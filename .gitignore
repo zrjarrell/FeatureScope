@@ -4,3 +4,7 @@
 ####lab information
 *.json
 *.txt
+
+**/pathsNotSortedByMethod
+
+*.db

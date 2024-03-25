@@ -42,7 +42,7 @@ def splitPathsByMethod(pathList):
         path = filePath.lower()
         if "c18neg" in path:
             negList += [filePath]
-        elif "hilicpos" in path or "c18pos" in path or "aepos" in path or "hilic" in path or "c18" in path or "ae" in path:
+        elif "hilicpos" in path or "c18pos" in path or "ae" in path:
             posList += [filePath]
         elif "neg" in path:
             negList += [filePath]
@@ -50,15 +50,29 @@ def splitPathsByMethod(pathList):
             posList += [filePath]
         else:
             unkList += [filePath]
+    for i in range(len(unkList)-1, -1, -1):
+        print(f'Number of paths remaining to sort: {i+1}')
+        print(unkList[i] + "\n")
+        response = input("Pos(p) or Neg(n)? ")
+        if response == "p":
+            posList += [unkList.pop(i)]
+        elif response == "n":
+            negList += [unkList.pop(i)]
+        else:
+            pass
     return {"pos": posList, "neg": negList, "unassigned": unkList}
 
-def saveFeatureTablePaths(dict, filename):
+def saveFTpaths(dict, filename):
     with open(filename, "w") as fileObject:
         json.dump(dict, fileObject)
     fileObject.close()
 
-def openFeatureTablePaths(filepath):
+def openFTpaths(filepath):
     f = open(filepath)
     return json.load(f)
 
-mainRepo, old5ppmRepo, old10ppmRepo, patterns = getRepositoryInfo()
+#mainRepo, old5ppmRepo, old10ppmRepo, patterns = getRepositoryInfo()
+
+
+
+"G:\\Medicine\\Pulmonary_ISILON\\Research\\Jones_Lab\\Orbitrap\\cdf\\ViLinh\\Velos\\germfreemice_yaima\\serum\\c18\\xMSanalyzerv2.0.6_09102015\\Stage3b\\featuretable_p1_U_p2_cor0.1_CV50_voidtimefilt.txt"
