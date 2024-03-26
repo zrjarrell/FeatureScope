@@ -4,7 +4,8 @@
 ####lab information
 *.json
 *.txt
-
 **/pathsNotSortedByMethod
 
+####results
 *.db
+**/__pycache__
