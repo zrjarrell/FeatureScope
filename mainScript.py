@@ -14,4 +14,4 @@ cur = con.cursor()
 
 searchTarget.checkForDbTable(cur, targets)
 
-searchTarget.searchStudyList(con, cur, mainPaths, targets, "pos")
+searchTarget.searchStudyList(con, cur, mainPaths, targets, "neg")
