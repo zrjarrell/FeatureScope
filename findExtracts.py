@@ -74,5 +74,3 @@ def openFTpaths(filepath):
 #mainRepo, old5ppmRepo, old10ppmRepo, patterns = getRepositoryInfo()
 
 
-
-"G:\\Medicine\\Pulmonary_ISILON\\Research\\Jones_Lab\\Orbitrap\\cdf\\ViLinh\\Velos\\germfreemice_yaima\\serum\\c18\\xMSanalyzerv2.0.6_09102015\\Stage3b\\featuretable_p1_U_p2_cor0.1_CV50_voidtimefilt.txt"
