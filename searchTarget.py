@@ -74,8 +74,9 @@ def searchDataframe(con, cur, targetList, dfPath, esi, studyNum, studyTotal):
                 addSampleMeasures(cur, target, featureID, matches, i)
                 featureNumber += 1
         targetCounter += 1
-    con.commit()
+    #con.commit()
 
 def searchStudyList(con, cur, studyDict, targets, esi):
     for i in range(0, len(studyDict[esi])):
         searchDataframe(con, cur, targets, studyDict[esi][i], esi, i+1, len(studyDict[esi]))
+    con.commit()

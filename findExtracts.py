@@ -1,25 +1,25 @@
 import os
 import json
 import pandas as pd
+import numpy as np
 
 def getRepositoryInfo():
     repoInfo = pd.read_csv("./repositoryInfo.txt", header=0, sep="\t")
-    repoInfo.fillna("", inplace=True)
     mainRepo = []
     old5ppmRepo = []
     old10ppmRepo = []
     patterns = []
     for path in repoInfo["mainRepositories"]:
-        if path != "":
+        if path != np.nan:
             mainRepo += [path]
     for path in repoInfo["old5ppmRepos"]:
-        if path != "":
+        if path != np.nan:
             old5ppmRepo += [path]
     for path in repoInfo["old10ppmRepos"]:
-        if path != "":
+        if path != np.nan:
             old10ppmRepo += [path]
     for path in repoInfo["featureTablePatterns"]:
-        if path != "":
+        if path != np.nan:
             patterns += [path]
     return mainRepo, old5ppmRepo, old10ppmRepo, patterns
 

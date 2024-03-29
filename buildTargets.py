@@ -1,5 +1,6 @@
 from utilityFunctions import properRound
 import pandas as pd
+import numpy as np
 
 class TargetChemical:
     def __init__(self, targetID, name, neutralMass, pubchemID, modification = "", reference = ""):
@@ -54,6 +55,10 @@ class TargetChemical:
             "2MAcetH": [properRound((2*neutralMass) + 59.013851, 6), "2M+CH3COO"],
             "3MH": [properRound((3*neutralMass) - 1.007276, 6), "3M-H"]
         }
+        if modification == np.nan:
+            modification = ""
+        if reference == np.nan:
+            reference = ""
         self.modification = modification
         self.referencePMID = str(reference)
     
@@ -70,9 +75,9 @@ class TargetChemical:
         else:
             print(f"Error: Range of {self.error} ppm already set for this object. Rebuild target list if you wish to use a different magnitude of mass error.")
 
-def makeTargetChemicals(libraryPath):
-    library = pd.read_csv(libraryPath, header=0, sep="\t")
-    library.fillna("", inplace=True)
+def makeTargetChemicals(library):
+    if isinstance(library, str):
+        library = pd.read_csv(library, header=0, sep="\t")
     targetChemicalList = []
     for i in library.index:
         targetChemicalList += [TargetChemical(library.loc[i, "target.id"],
@@ -86,3 +91,18 @@ def makeTargetChemicals(libraryPath):
 def setTargetRanges(targetChemicalList, ppm):
     for targetChemical in targetChemicalList:
         targetChemical.setRanges(ppm)
+
+def getNewTargets():
+    oldTargets = pd.read_csv("./targetList.txt", header=0, sep="\t")
+    newTargets = pd.read_csv("./newTargets.txt", header=0, sep="\t")
+    lastLabel = int(oldTargets.loc[len(oldTargets)-1, "target.id"].split('target')[1])
+    targetIDs = []
+    for i in newTargets.index:
+        targetIDs += ['target' + ("0" * (6 - len(str(lastLabel+1))) + str(lastLabel+1))]
+        lastLabel += 1
+    newTargets.insert(0, "target.id", targetIDs, True)
+    totalTargets = pd.concat([oldTargets, newTargets]).reset_index(drop=True)
+    totalTargets.to_csv("./targetList.txt", sep="\t", index=False)
+    newBlank = pd.DataFrame(columns = newTargets.columns[1:])
+    newBlank.to_csv("newTargets.txt", sep="\t", index=False)
+    return newTargets
