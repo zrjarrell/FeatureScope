@@ -3,9 +3,12 @@
 
 ####lab information
 *.json
-*.txt
-**/pathsNotSortedByMethod
+targetList.txt
+repositoryInfo.txt
 
 ####results
 *.db
 **/__pycache__
+
+##dev
+dev_notes.txt

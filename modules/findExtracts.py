@@ -1,7 +1,7 @@
 import os
 import json
 import pandas as pd
-import numpy as np
+import math
 
 def getRepositoryInfo():
     repoInfo = pd.read_csv("./repositoryInfo.txt", header=0, sep="\t")
@@ -10,16 +10,24 @@ def getRepositoryInfo():
     old10ppmRepo = []
     patterns = []
     for path in repoInfo["mainRepositories"]:
-        if path != np.nan:
+        try:
+            math.isnan(path)
+        except TypeError:
             mainRepo += [path]
     for path in repoInfo["old5ppmRepos"]:
-        if path != np.nan:
+        try:
+            math.isnan(path)
+        except TypeError:
             old5ppmRepo += [path]
     for path in repoInfo["old10ppmRepos"]:
-        if path != np.nan:
+        try:
+            math.isnan(path)
+        except TypeError:
             old10ppmRepo += [path]
     for path in repoInfo["featureTablePatterns"]:
-        if path != np.nan:
+        try:
+            math.isnan(path)
+        except TypeError:
             patterns += [path]
     return mainRepo, old5ppmRepo, old10ppmRepo, patterns
 
@@ -31,7 +39,8 @@ def getFeatureTablePaths(repos, patterns):
             for filename in files:
                 fname = os.path.join(dirpath, filename)
                 if filename in patterns:
-                    filepaths += [fname]
+                    if list(pd.read_csv(fname, header=0, sep="\t").columns[0:2]) == ['mz', 'time']:
+                        filepaths += [fname]
     return filepaths
 
 def splitPathsByMethod(pathList):
@@ -62,14 +71,25 @@ def splitPathsByMethod(pathList):
             pass
     return {"pos": posList, "neg": negList, "unassigned": unkList}
 
-def saveFTpaths(dict, filename):
-    with open(filename, "w") as fileObject:
-        json.dump(dict, fileObject)
-    fileObject.close()
+def removeMissingPaths(removalList, wholeListJSONPath, esi):
+    #update method sorted jsons by removing dud paths
+    editedList = []
+    wholeList = json.load(open(wholeListJSONPath))
+    for path in wholeList[esi]:
+        if path not in removalList[esi]:
+            editedList += [path]
+    wholeList[esi] = editedList
+    #update non-method sorted jsons by removing dud paths
+    unsortedWholeListJSONPath = './pathsNotSortedByMethod/' + wholeListJSONPath[2:-5] + 'Unsorted.json'
+    unsortedEditedList = []
+    unsortedWholelist = json.load(open(unsortedWholeListJSONPath))
+    for path in unsortedWholelist:
+        if path not in removalList:
+            unsortedEditedList += [path]
+    json.dump(wholeList, open(wholeListJSONPath, 'w'), indent=4)
+    json.dump(unsortedEditedList, open(unsortedWholeListJSONPath, 'w'), indent=4)
 
-def openFTpaths(filepath):
-    f = open(filepath)
-    return json.load(f)
+
 
 #mainRepo, old5ppmRepo, old10ppmRepo, patterns = getRepositoryInfo()
 

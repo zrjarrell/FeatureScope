@@ -1,4 +1,4 @@
-from utilityFunctions import properRound
+from modules.utilityFunctions import properRound
 import pandas as pd
 import numpy as np
 
