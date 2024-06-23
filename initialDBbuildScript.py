@@ -1,14 +1,17 @@
 import sqlite3
-import modules.findExtracts as findExtracts
+import modules.manageExtracts as manageExtracts
 import modules.buildTargets as buildTargets
 import modules.searchTarget as searchTarget
+from modules.dbManagement import makeDbTables, savePreviousVersions
+
+savePreviousVersions()
 
 con = sqlite3.connect("./targetDatabase.db")
 cur = con.cursor()
-searchTarget.makeDbTables(con, cur)
+makeDbTables(con, cur, "./targetList.txt")
 
 #search 5 ppm data
-targets5ppm = buildTargets.makeTargetChemicals("./targetList.txt")
+targets5ppm = buildTargets.makeTargetChemicals(con)
 buildTargets.setTargetRanges(targets5ppm, 5)
 
 mainPaths = "./mainPaths.json"
@@ -24,7 +27,7 @@ for pathlist in all5ppmPaths:
     badPaths[pathlist + '5ppm']['neg'] = searchTarget.searchStudyList(con, cur, all5ppmPaths[pathlist], targets5ppm, "neg")
 
 #search 10 ppm data
-targets10ppm = buildTargets.makeTargetChemicals("./targetList.txt")
+targets10ppm = buildTargets.makeTargetChemicals(con)
 buildTargets.setTargetRanges(targets10ppm, 10)
 
 old10ppmPaths = "./old10ppmPaths.json"
@@ -43,4 +46,4 @@ removalKeys = ['current5ppm', 'old5ppm', 'old10ppm']
 for i in range(0, 3):
     for esi in ['pos', 'neg']:
         if len(badPaths[removalKeys[i]][esi]) > 0:
-            findExtracts.removeMissingPaths(badPaths[removalKeys[i]], editLists[i], esi)
+            manageExtracts.removeMissingPaths(badPaths[removalKeys[i]], editLists[i], esi)

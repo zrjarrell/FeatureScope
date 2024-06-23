@@ -1,14 +1,19 @@
 import json
 import sqlite3
-import modules.findExtracts as findExtracts
+import modules.manageExtracts as manageExtracts
 import modules.buildTargets as buildTargets
 import modules.searchTarget as searchTarget
+from modules.dbManagement import savePreviousVersions
+
+savePreviousVersions()
 
 #search current directories to list
-mainRepo = findExtracts.getRepositoryInfo()[0]
-patterns = findExtracts.getRepositoryInfo()[3]
+config = json.load(open('./config.json'))
+mainRepo = config["repos"]["mainRepos"]
+patterns = config["featureTableNamePatterns"]
 
-currentMainRepoPaths = findExtracts.getFeatureTablePaths(mainRepo, patterns)
+print("Searching current repos for new data. This may take several minutes.")
+currentMainRepoPaths = manageExtracts.getFeatureTablePaths(mainRepo, patterns)
 
 #find list values not in mainPaths or blacklist and store in newPaths list
 mainPathsUnsorted = json.load(open('./pathsNotSortedByMethod/mainPathsUnsorted.json'))
@@ -22,18 +27,18 @@ for path in currentMainRepoPaths:
 #update mainPathsUnsorted.json
 mainPathsUnsorted += newMainRepoPaths
 
-json.dump(mainPathsUnsorted, open('./pathsNotSortedByMethod/mainPathsUnsorted.json', 'w'))
+json.dump(mainPathsUnsorted, open('./pathsNotSortedByMethod/mainPathsUnsorted.json', 'w'), indent=4)
 
 #sort newly found featureTable paths by method
-newMainPathsSorted = findExtracts.splitPathsByMethod(newMainRepoPaths)
+newMainPathsSorted = manageExtracts.splitPathsByMethod(newMainRepoPaths)
 
 #update mainPaths.json with newly found paths
 mainPaths = json.load(open('./mainPaths.json'))
 for key in mainPaths:
     mainPaths[key] += newMainPathsSorted[key]
 
-json.dump(mainPaths, open('./mainPaths.json', 'w'))
-json.dump(newMainPathsSorted, open('./newestMainSearchBackup.json', 'w'))
+json.dump(mainPaths, open('./mainPaths.json', 'w'), indent=4)
+json.dump(newMainPathsSorted, open('./previousVersions/newestMainSearchBackup.json', 'w'), indent=4)
 
 #######search newPaths list for targets and update database
 #open db
@@ -41,11 +46,11 @@ con = sqlite3.connect("./targetDatabase.db")
 cur = con.cursor()
 
 #build 5 ppm targets
-targets5ppm = buildTargets.makeTargetChemicals("./targetList.txt")
+targets5ppm = buildTargets.makeTargetChemicals(con)
 buildTargets.setTargetRanges(targets5ppm, 5)
 
 badPaths = {}
-new5ppmPaths = {"new": './newestMainSearchBackup.json'}
+new5ppmPaths = {"new": './previousVersions/newestMainSearchBackup.json'}
 for pathlist in new5ppmPaths:
     print(f"Searching {pathlist} 5 ppm extracted data repository.\n\tSearching positive data.")
     badPaths['pos'] = searchTarget.searchStudyList(con, cur, new5ppmPaths[pathlist], targets5ppm, "pos")
@@ -56,4 +61,4 @@ for pathlist in new5ppmPaths:
 print("Removing bad paths from path library.")
 for esi in ['pos', 'neg']:
     if len(badPaths[esi]) > 0:
-        findExtracts.removeMissingPaths(badPaths, './mainPaths.json', esi)
+        manageExtracts.removeMissingPaths(badPaths, './mainPaths.json', esi)

@@ -1,35 +1,6 @@
 import os
 import json
 import pandas as pd
-import math
-
-def getRepositoryInfo():
-    repoInfo = pd.read_csv("./repositoryInfo.txt", header=0, sep="\t")
-    mainRepo = []
-    old5ppmRepo = []
-    old10ppmRepo = []
-    patterns = []
-    for path in repoInfo["mainRepositories"]:
-        try:
-            math.isnan(path)
-        except TypeError:
-            mainRepo += [path]
-    for path in repoInfo["old5ppmRepos"]:
-        try:
-            math.isnan(path)
-        except TypeError:
-            old5ppmRepo += [path]
-    for path in repoInfo["old10ppmRepos"]:
-        try:
-            math.isnan(path)
-        except TypeError:
-            old10ppmRepo += [path]
-    for path in repoInfo["featureTablePatterns"]:
-        try:
-            math.isnan(path)
-        except TypeError:
-            patterns += [path]
-    return mainRepo, old5ppmRepo, old10ppmRepo, patterns
 
 def getFeatureTablePaths(repos, patterns):
     filepaths = []
@@ -90,7 +61,5 @@ def removeMissingPaths(removalList, wholeListJSONPath, esi):
     json.dump(unsortedEditedList, open(unsortedWholeListJSONPath, 'w'), indent=4)
 
 
-
-#mainRepo, old5ppmRepo, old10ppmRepo, patterns = getRepositoryInfo()
 
 

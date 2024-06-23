@@ -1,6 +1,8 @@
 from modules.utilityFunctions import properRound
+from modules.dbManagement import importChemicalLibrary
 import pandas as pd
 import numpy as np
+import math
 
 class TargetChemical:
     def __init__(self, targetID, name, neutralMass, pubchemID, modification = "", reference = ""):
@@ -75,34 +77,74 @@ class TargetChemical:
         else:
             print(f"Error: Range of {self.error} ppm already set for this object. Rebuild target list if you wish to use a different magnitude of mass error.")
 
-def makeTargetChemicals(library):
-    if isinstance(library, str):
-        library = pd.read_csv(library, header=0, sep="\t")
+def makeTargetChemicals(con, newTargets='read targetChemicals'):
+    if isinstance(newTargets, str):
+        library = pd.read_sql_query("SELECT * FROM targetChemicals", con)
+    else:
+        library = newTargets
     targetChemicalList = []
     for i in library.index:
-        targetChemicalList += [TargetChemical(library.loc[i, "target.id"],
-                                              library.loc[i, "compound.name"],
-                                              library.loc[i, "neutral.monoisotopic.mass"],
-                                              library.loc[i, "pubchem.cid"],
-                                              library.loc[i, "modification"],
-                                              library.loc[i, "reference.pmid"])]
+        targetChemicalList += [TargetChemical(library.loc[i, "targetID"],
+                                            library.loc[i, "compoundName"],
+                                            library.loc[i, "neutralMonoisotopicMass"],
+                                            library.loc[i, "pubchemCID"],
+                                            library.loc[i, "modification"],
+                                            library.loc[i, "referencePMID"])]
     return targetChemicalList
 
 def setTargetRanges(targetChemicalList, ppm):
     for targetChemical in targetChemicalList:
         targetChemical.setRanges(ppm)
 
-def getNewTargets():
-    oldTargets = pd.read_csv("./targetList.txt", header=0, sep="\t")
-    newTargets = pd.read_csv("./newTargets.txt", header=0, sep="\t")
-    lastLabel = int(oldTargets.loc[len(oldTargets)-1, "target.id"].split('target')[1])
+def getManualTargetInput():
+    validEntry = 'n'
+    newEntry = {}
+    while validEntry != 'y':
+        newEntry["compoundName"] = str(input("Enter name of compound: "))
+        isFloat = False
+        newEntry["neutralMonoisotopicMass"] = input("Enter neutral monoisotopic mass to 6 decimal places: ")
+        while not isFloat:
+            try:
+                newEntry["neutralMonoisotopicMass"] = float(newEntry["neutralMonoisotopicMass"])
+                isFloat = True
+            except TypeError:
+                newEntry["neutralMonoisotopicMass"] = input("Error evaluating input. Please enter a number.")
+        isDbChemical = str(input("Is this chemical in PubChem? (y/n)"))
+        if isDbChemical == 'y':
+            newEntry["pubchemCID"] = str(input("Enter PubChem CID: "))
+            newEntry["modification"] = math.nan
+            newEntry["referencePMID"] = math.nan
+        else:
+            newEntry["pubchemCID"] = str(input("Enter PubChem CID of known/expected precursor and provide detail of modification when prompted next. "))
+            newEntry["modification"] = str(input("Provide a short description of modifications to produce this chemical from the entered precursor. "))
+            newEntry["referencePMID"] = str(input("If this metabolite has been described in the literature, provide a PMID for the reference. Enter only the numeric string. If none, just press enter/return. ")) or math.nan
+        print(newEntry)
+        validEntry = input("Would you like to submit this entry to the target list? (y/n)")
+    return newEntry
+
+def getNewTargets(con, cur, library=False):
+    oldTargets = pd.read_sql_query("SELECT * FROM targetChemicals", con)
+    lastLabel = int(oldTargets.loc[len(oldTargets)-1, "targetID"].split('target')[1])
+    if not isinstance(library, str):
+        newTargets = pd.DataFrame(columns=oldTargets.columns[1:])
+        enterMore = 'y'
+        while enterMore != 'n':
+            newEntry = getManualTargetInput()
+            newTargets = pd.concat([newTargets, pd.DataFrame(newEntry, index=[0])], ignore_index=True)
+            enterMore = input("Would you like to enter more targets? (y/n) ")
+    else:
+        newTargets = pd.read_csv(library, header=0, sep="\t")
     targetIDs = []
     for i in newTargets.index:
         targetIDs += ['target' + ("0" * (6 - len(str(lastLabel+1))) + str(lastLabel+1))]
         lastLabel += 1
-    newTargets.insert(0, "target.id", targetIDs, True)
+    newTargets.insert(0, "targetID", targetIDs, True)
     totalTargets = pd.concat([oldTargets, newTargets]).reset_index(drop=True)
     totalTargets.to_csv("./targetList.txt", sep="\t", index=False)
-    newBlank = pd.DataFrame(columns = newTargets.columns[1:])
-    newBlank.to_csv("newTargets.txt", sep="\t", index=False)
+    if isinstance(library, str):
+        newBlank = pd.DataFrame(columns = newTargets.columns[1:])
+        newBlank.to_csv(library, sep="\t", index=False)
+    importChemicalLibrary(cur, newTargets)
+    con.commit()
     return newTargets
+    

@@ -1,17 +1,21 @@
 import modules.buildTargets as buildTargets
-import modules.findExtracts as findExtracts
+import modules.manageExtracts as manageExtracts
 import modules.searchTarget as searchTarget
 import sqlite3
+from modules.dbManagement import savePreviousVersions
 
-#read new target library
-newTargets = buildTargets.getNewTargets()
+savePreviousVersions()
 
 #open db
 con = sqlite3.connect("./targetDatabase.db")
 cur = con.cursor()
 
+#read new target library
+newTargets = buildTargets.getNewTargets(con, cur, './newTargets.txt') #optional third parameter: path to newTargets.txt as str
+#If this third parameter is provided, new targets will be imported from the table. If not, user will be prompted for input in CLI
+
 #search 5 ppm data
-newTargets5ppm = buildTargets.makeTargetChemicals(newTargets)
+newTargets5ppm = buildTargets.makeTargetChemicals(con, newTargets)
 buildTargets.setTargetRanges(newTargets5ppm, 5)
 
 mainPaths = "./mainPaths.json"
@@ -27,7 +31,7 @@ for pathlist in all5ppmPaths:
     badPaths[pathlist + '5ppm']['neg'] = searchTarget.searchStudyList(con, cur, all5ppmPaths[pathlist], newTargets5ppm, "neg")
 
 #search 10 ppm data
-newTargets10ppm = buildTargets.makeTargetChemicals(newTargets)
+newTargets10ppm = buildTargets.makeTargetChemicals(con, newTargets)
 buildTargets.setTargetRanges(newTargets10ppm, 10)
 
 old10ppmPaths = "./old10ppmPaths.json"
@@ -46,4 +50,4 @@ removalKeys = ['current5ppm', 'old5ppm', 'old10ppm']
 for i in range(0, 3):
     for esi in ['pos', 'neg']:
         if len(badPaths[removalKeys[i]][esi]) > 0:
-            findExtracts.removeMissingPaths(badPaths[removalKeys[i]], editLists[i], esi)
+            manageExtracts.removeMissingPaths(badPaths[removalKeys[i]], editLists[i], esi)

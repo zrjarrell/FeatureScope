@@ -1,1 +1,1 @@
-compound.name	neutral.monoisotopic.mass	pubchem.cid	modification	reference.pmid
+compoundName	neutralMonoisotopicMass	pubchemCID	modification	referencePMID
