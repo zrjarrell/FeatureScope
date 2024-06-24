@@ -1,4 +1,4 @@
-from modules.utilityFunctions import properRound
+from modules.utilityFunctions import properRound, makeID
 from modules.dbManagement import importChemicalLibrary
 import pandas as pd
 import numpy as np
@@ -136,7 +136,7 @@ def getNewTargets(con, cur, library=False):
         newTargets = pd.read_csv(library, header=0, sep="\t")
     targetIDs = []
     for i in newTargets.index:
-        targetIDs += ['target' + ("0" * (6 - len(str(lastLabel+1))) + str(lastLabel+1))]
+        targetIDs += [makeID('target', 6, lastLabel+1)]
         lastLabel += 1
     newTargets.insert(0, "targetID", targetIDs, True)
     totalTargets = pd.concat([oldTargets, newTargets]).reset_index(drop=True)

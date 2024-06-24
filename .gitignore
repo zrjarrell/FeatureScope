@@ -9,6 +9,7 @@ repositoryInfo.txt
 ####results
 *.db
 **/__pycache__
+*.xlsx
 
 ##dev
 dev_notes.txt

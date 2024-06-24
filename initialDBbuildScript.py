@@ -4,7 +4,7 @@ import modules.buildTargets as buildTargets
 import modules.searchTarget as searchTarget
 from modules.dbManagement import makeDbTables, savePreviousVersions
 
-savePreviousVersions()
+savePreviousVersions(['./targetDatabase.db'])
 
 con = sqlite3.connect("./targetDatabase.db")
 cur = con.cursor()
